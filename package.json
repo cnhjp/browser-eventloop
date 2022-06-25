@@ -1,0 +1,19 @@
+{
+  "name": "browser-eventloop",
+  "private": true,
+  "scripts": {
+    "build": "slidev build --download",
+    "dev": "slidev",
+    "export": "slidev export"
+  },
+  "dependencies": {
+    "@iconify-json/ph": "^1.1.1",
+    "@slidev/cli": "^0.33.0",
+    "@slidev/theme-default": "*",
+    "@slidev/theme-seriph": "*",
+    "playwright-chromium": "^1.22.2"
+  },
+  "devDependencies": {
+    "@iconify-json/clarity": "^1.1.3"
+  }
+}
