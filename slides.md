@@ -3,7 +3,7 @@
 theme: seriph
 # random image from a curated Unsplash collection by Anthony
 # like them? see https://unsplash.com/collections/94734566/slidev
-background: https://source.unsplash.com/collection/94734566/1920x1080
+background: https://images.unsplash.com/photo-1554114385-d2905b971497?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80
 # apply any windi css classes to the current slide
 class: 'text-center'
 # https://sli.dev/custom/highlighters.html
@@ -65,7 +65,7 @@ JavaScript语言的一大特点就是单线程，也就是说，同一个时间�
 
 JavaScript的单线程，与它的用途有关。作为浏览器脚本语言，JavaScript的主要用途是与用户互动，以及操作DOM。这决定了它只能是单线程，否则会带来很复杂的同步问题。比如，假定JavaScript同时有两个线程，一个线程在某个DOM节点上添加内容，另一个线程删除了这个节点，这时浏览器应该以哪个线程为准？
 
-所以，为了避免复杂性，从一诞生，JavaScript就是单线程，这已经成了这门语言的核心特征，将来也不会改变。
+所以，为了避免复杂性，从一诞生，JavaScript就是单线程，这已经成了这门语言的核心特征，将来也很难会改变。
 
 为了利用多核CPU的计算能力，HTML5提出Web Worker标准，允许JavaScript脚本创建多个线程，但是子线程完全受主线程控制，且不得操作DOM。所以，这个新标准并没有改变JavaScript单线程的本质。
 
@@ -130,7 +130,7 @@ Event Loop是宿主环境为了集合渲染和 JS 执行，也为了处理 JS �
     <p>这样就解决了渲染、JS 执行、worker 这三者的调度问题。</p>
     <p>但是这样有没有问题？</p>
     <p>我们会在任务队列中不断的放新的任务，这样如果有更高优的任务是不是要等所有任务都执行完才能被执行。如果是“急事”呢？</p>
-    <p>所以这样还不行，要给 event loop 加上“急事”处理的快速通道，这就是微任务 micro tasks。</p>
+    <p>所以这样还不行，我们要给 event loop 加上“急事”处理的快速通道，这就是微任务 micro tasks。</p>
   </div>
 
   <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/997ef546f14f4faaa59bcee0d1ddbd5a~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp" class="w-50 h-auto" />
@@ -189,6 +189,7 @@ JS 执行完，开始渲染之前会有一个生命周期，就是 requestAnimat
 
 ---
 
+
 # 总结
 
 <div></div>
@@ -224,6 +225,29 @@ new Promise(resolve => {
 
 console.log('script end');
 ```
+
+---
+
+# Vue中的Event Loop
+
+```javascript
+const counter = ref(0);
+const changeCounter = () => {
+  const el = document.getElementById("counter");
+  console.log("a: ", el.innerText);
+  counter.value = 2;
+  nextTick(() => {
+    console.log("b: ", el.innerText);
+  });
+  counter.value = 3;
+  console.log("c: ", el.innerText);
+};
+```
+
+<details class="mt-4">
+  <summary>答案</summary>
+  <p>a: 0, c: 0, b: 3</p>
+</details>
 
 ---
 
