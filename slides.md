@@ -167,9 +167,9 @@ JS 执行完，开始渲染之前会有一个生命周期，就是 requestAnimat
 
 什么情况会导致帧刷新拖延甚至帧数据被覆盖（丢帧）呢？每个 loop 在 check 渲染之前的每一个阶段都有可能，也就是 task、microtask、requestAnimationFrame、requestIdleCallback 都有可能导致阻塞了 check，这样等到了 check 的时候发现要渲染了，再去渲染的时候就晚了。
 
-所以主线程 JS 代码不要做太多的计算（不像安卓会很自然的起一个线程来做），要做拆分，这也是为啥 ui 框架要做计算的 fiber 化，就是因为处理交互的时候，不能让计算阻塞了渲染，要递归改循环，通过链表来做计算的暂停恢复。
+所以主线程 JS 代码不要做太多的计算（不像安卓会很自然的起一个线程来做），要做拆分，这也是为啥 ui 框架要做计算的 fiber 化，就是因为处理交互的时候，不能让计算阻塞了渲染，要递归改循环，通过链表来做计算的暂停恢复。对于一些计算复杂的操作，可以放到worker中执行。
 
-除了 JS 代码本身要注意之外，如果浏览器能够提供 API 就是在每帧间隔来执行，那样岂不是就不会阻塞了，所以后来有了 requestIdeCallback。
+除了 JS 代码要注意之外，如果浏览器能够提供 API 就是在每帧间隔来执行，那样岂不是就不会阻塞了，所以后来有了 requestIdleCallback。
 
 ---
 
@@ -198,12 +198,29 @@ JS 执行完，开始渲染之前会有一个生命周期，就是 requestAnimat
 
 event loop 实现了 task 和 急事处理机制 microtask，而且每次 loop 结束会 check 是否要渲染，渲染之前会有 requestAnimationFrames 生命周期。
 
-帧刷新不能被拖延否则会卡顿甚至掉帧，所以就需要 JS 代码里面不要做过多计算，于是有了  requestIdleCallback 的 api，希望在每次 check 完发现还有时间就执行，没时间就不执行（这个deadline的时间也作为参数让 js 代码自己判断），为了避免一直没时间，还提供了 timeout 参数强制执行。
+帧刷新尽量不被拖延否则会卡顿掉帧，所以就需要 JS 代码里面不要做过多计算，于是有了  requestIdleCallback 的 api，希望在每次 check 完发现还有时间就执行，没时间就不执行（这个deadline的时间也作为参数让 js 代码自己判断），为了避免一直没时间被冷落，还提供了 timeout 参数强制执行。
 
-防止计算时间过长导致渲染掉帧是 ui 框架一直关注的问题，就是怎么不阻塞渲染，让逻辑能够拆成帧间隔时间内能够执行完的小块。浏览器提供了 idelcallback 的 api，很多 ui 框架也通过递归改循环然后记录状态等方式实现了计算量的拆分，目的只有一个：loop 内的逻辑执行不能阻塞 check，也就是不能阻塞渲染引擎做帧刷新。所以不管是 JS 代码宏微任务、 requestAnimationCallback、requestIdleCallback 都不能计算时间太长。这个问题是前端开发的持续性阵痛。
+防止计算时间过长导致渲染掉帧是 ui 框架一直关注的问题，就是怎么不阻塞渲染，让逻辑能够拆成帧间隔时间内能够执行完的小块。浏览器提供了 idlecallback 的 api，很多 ui 框架也通过递归改循环然后记录状态等方式实现了计算量的拆分，目的只有一个：loop 内的逻辑执行不能阻塞 check，也就是不能阻塞渲染引擎做帧刷新。所以不管是 JS 代码宏微任务、 requestAnimationCallback、requestIdleCallback 都不能计算时间太长。这个问题是前端开发的持续性阵痛。
 
 ---
 
+
+# 宏任务与微任务
+
+## 宏任务
+
+- \<script\>标签中的运行代码
+- 事件触发的回调函数，例如DOM Events、I/O、requestAnimationFrame
+- setTimeout、setInterval的回调函数
+
+## 微任务
+
+- promises：Promise.then、Promise.catch、Promise.finally
+- MutationObserver
+- queueMicrotask
+- process.nextTick：Node独有
+
+---
 
 # 回头看
 
@@ -225,29 +242,6 @@ new Promise(resolve => {
 
 console.log('script end');
 ```
-
----
-
-# Vue中的Event Loop
-
-```javascript
-const counter = ref(0);
-const changeCounter = () => {
-  const el = document.getElementById("counter");
-  console.log("a: ", el.innerText);
-  counter.value = 2;
-  nextTick(() => {
-    console.log("b: ", el.innerText);
-  });
-  counter.value = 3;
-  console.log("c: ", el.innerText);
-};
-```
-
-<details class="mt-4">
-  <summary>答案</summary>
-  <p>a: 0, c: 0, b: 3</p>
-</details>
 
 ---
 
